@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+/*
+ * Astra Dine. Colours come from Kalamkari dyes: indigo for actions, turmeric for rewards and
+ * stamps, madder for spice and alerts, on a clean neutral ground. Dish names are set in a
+ * bookish serif like a good printed menu; everything else uses a face built for legibility,
+ * because kitchen screens are read from across a hot room.
+ */
+@theme {
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --font-menu: var(--font-petrona), Georgia, serif;
+  --font-te: var(--font-telugu), var(--font-atkinson), sans-serif;
+
+  --color-ground: #f5f5f2;
+  --color-card: #ffffff;
+  --color-ink: #1d1a17;
+  --color-ink-2: #45403a;
+  --color-muted: #6a645d; /* 5.6:1 on ground */
+  --color-line: #e4e1db;
+  --color-line-2: #cfcac2;
+  --color-indigo: #27326f; /* primary: 10.9:1 with white */
+  --color-indigo-2: #1b2452;
+  --color-indigo-tint: #eaecf7;
+  --color-turmeric: #e2a01e;
+  --color-turmeric-ink: #7a5300;
+  --color-turmeric-tint: #fbf0d6;
+  --color-madder: #a3301f;
+  --color-madder-tint: #fbe9e4;
+  --color-leaf: #2c6a3a;
+  --color-leaf-tint: #e4f1e6;
+  --color-veg: #1f8a3a;
+  --color-nonveg: #7b3b12;
+
+  /* Kitchen display */
+  --color-pass: #131416;
+  --color-pass-2: #1d1f23;
+  --color-pass-3: #2a2d33;
+  --color-slip: #fbfaf6;
+
+  --radius-ctl: 0.6rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-indigo);
+    outline-offset: 2px;
+  }
+  button,
+  summary,
+  select,
+  label:has(input) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .dish {
+    font-family: var(--font-menu);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Guest-side prices use the menu face: the UI face's slashed zero reads as technical. */
+  .price {
+    font-family: var(--font-menu);
+    font-weight: 600;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .btn {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-ctl);
+    padding-inline: 1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition:
+      background-color 0.12s ease,
+      transform 0.08s ease;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-primary {
+    background: var(--color-indigo);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--color-indigo-2);
+  }
+  .btn-line {
+    border: 1.5px solid var(--color-line-2);
+    background: var(--color-card);
+  }
+  .btn-line:hover {
+    border-color: var(--color-ink-2);
+  }
+  .btn-quiet:hover {
+    background: rgb(29 26 23 / 0.06);
+  }
+  .btn-turmeric {
+    background: var(--color-turmeric);
+    color: #241800;
+  }
+  .field {
+    min-height: 2.75rem;
+    width: 100%;
+    border: 1.5px solid var(--color-line-2);
+    border-radius: var(--radius-ctl);
+    background: var(--color-card);
+    padding-inline: 0.75rem;
+  }
+  textarea.field {
+    padding-block: 0.6rem;
+  }
+  .label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--color-ink-2);
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+  .table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+  }
+  .table th {
+    border-bottom: 1.5px solid var(--color-line-2);
+    padding: 0.55rem 0.75rem;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .table td {
+    border-bottom: 1px solid var(--color-line);
+    padding: 0.6rem 0.75rem;
+  }
+  .table td.text-right {
+    white-space: nowrap;
+  }
+}
+
+/* One deliberate moment: a stamp landing on the loyalty card after payment. */
+@keyframes stamp {
+  0% {
+    transform: scale(1.8) rotate(-18deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.92) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+.stamp-in {
+  animation: stamp 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes slide-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+.sheet-in {
+  animation: slide-up 0.2s ease-out;
+}
+@keyframes flash {
+  from {
+    box-shadow: 0 0 0 4px var(--color-turmeric);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.flash {
+  animation: flash 1.6s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stamp-in,
+  .sheet-in,
+  .flash {
+    animation: none;
+  }
+}
+
+@media print {
+  header,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
