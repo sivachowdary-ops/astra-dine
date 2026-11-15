@@ -48,11 +48,21 @@ export function useLive<T>(restaurantId: string, tables: string[], load: () => P
     reloadRef.current = () => void run();
     void run();
     const supabase = browserClient();
-    let channel = supabase.channel(`r-${restaurantId}-${key}`);
-    for (const table of key.split(",")) {
-      channel = channel.on("postgres_changes", { event: "*", schema: "public", table, filter: `restaurant_id=eq.${restaurantId}` }, soon);
-    }
-    channel.subscribe((status: string) => setOnline(status === "SUBSCRIBED"));
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    // Join with the staff member's login, not the public key, or row security hides every change.
+    void supabase.auth.getSession().then(({ data: auth }: { data: { session: { access_token: string } | null } }) => {
+      if (!alive) return;
+      if (auth.session) void supabase.realtime.setAuth(auth.session.access_token);
+      let ch = supabase.channel(`r-${restaurantId}-${key}-${Math.random().toString(36).slice(2, 8)}`);
+      for (const table of key.split(",")) {
+        ch = ch.on("postgres_changes", { event: "*", schema: "public", table, filter: `restaurant_id=eq.${restaurantId}` }, soon);
+      }
+      ch.subscribe((status: string) => {
+        setOnline(status === "SUBSCRIBED");
+        if (status === "SUBSCRIBED") soon();
+      });
+      channel = ch;
+    });
     const slow = window.setInterval(() => void run(), 30_000);
     const wake = () => {
       if (document.visibilityState === "visible") void run();
@@ -63,7 +73,7 @@ export function useLive<T>(restaurantId: string, tables: string[], load: () => P
       window.clearTimeout(timer);
       window.clearInterval(slow);
       document.removeEventListener("visibilitychange", wake);
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [restaurantId, key]);
 

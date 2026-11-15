@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { staffEmail } from "@/lib/rules";
 import { browserClient } from "@/lib/supabase/browser";
@@ -11,13 +11,19 @@ import { browserClient } from "@/lib/supabase/browser";
  */
 export function StaffLogin({ app, title, dark = false }: { app: "kitchen" | "pos"; title: string; dark?: boolean }) {
   const router = useRouter();
-  const [code, setCode] = useState(() => {
-    try {
-      return typeof window === "undefined" ? "" : (localStorage.getItem("dine-restaurant") ?? "");
-    } catch {
-      return "";
-    }
-  });
+  const [code, setCode] = useState("");
+  // The device remembers its restaurant; fill it in after the page has loaded.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem("dine-restaurant");
+        if (saved) setCode((c) => c || saved);
+      } catch {
+        // No storage: type it each time.
+      }
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, []);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
