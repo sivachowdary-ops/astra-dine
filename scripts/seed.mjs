@@ -200,3 +200,6 @@ writeFileSync(
 );
 console.log(`Kaaram Kitchen ready: ${items.length} dishes, ${tables.length} tables, ${joined.length} members, ${sessions.length} past bills.`);
 console.log("Logins written to demo-logins.local.txt");
+
+// Photos, cover, logo, offer and serving hours for the showcase.
+await import("./showcase-media.mjs");

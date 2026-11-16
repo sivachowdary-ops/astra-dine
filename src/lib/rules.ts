@@ -42,6 +42,39 @@ export function upiLink(r: Pick<Restaurant, "upi_vpa" | "upi_name" | "name">, am
   return `upi://pay?${q.toString()}`;
 }
 
+/** Minutes since midnight in India, whatever the server's or phone's time zone. */
+export function indiaMinutes(now = new Date()) {
+  const p = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const h = Number(p.find((x) => x.type === "hour")?.value ?? 0);
+  const m = Number(p.find((x) => x.type === "minute")?.value ?? 0);
+  return h * 60 + m;
+}
+const toMin = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+};
+/** Whether a menu section is being served now. Sections without hours are always open. */
+export function servingNow(c: { available_from: string | null; available_to: string | null }, now = new Date()) {
+  if (!c.available_from || !c.available_to) return true;
+  const t = indiaMinutes(now);
+  const from = toMin(c.available_from);
+  const to = toMin(c.available_to);
+  return from <= to ? t >= from && t < to : t >= from || t < to;
+}
+/** "7 to 11:30 am" */
+export function hoursLabel(c: { available_from: string | null; available_to: string | null }) {
+  if (!c.available_from || !c.available_to) return null;
+  const f = (t: string) => {
+    const m = toMin(t);
+    const h = Math.floor(m / 60);
+    const mm = m % 60;
+    return { text: `${h % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""}`, pm: h >= 12 };
+  };
+  const a = f(c.available_from);
+  const b = f(c.available_to);
+  return a.pm === b.pm ? `${a.text} to ${b.text} ${b.pm ? "pm" : "am"}` : `${a.text} ${a.pm ? "pm" : "am"} to ${b.text} ${b.pm ? "pm" : "am"}`;
+}
+
 export const inr = (n: number) => `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(n))}`;
 
 export function minsSince(iso: string | null | undefined, now = Date.now()) {

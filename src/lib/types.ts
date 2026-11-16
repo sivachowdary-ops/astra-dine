@@ -21,11 +21,25 @@ export type Restaurant = {
   reward_text: string;
   reward_value: number;
   google_review_url: string | null;
+  cover_url: string | null;
+  logo_url: string | null;
+  tagline: string | null;
+  offer_title: string | null;
+  offer_text: string | null;
 };
 
 export type Staff = { user_id: string; restaurant_id: string; name: string; username: string; role: Role; active: boolean };
 
-export type Category = { id: string; restaurant_id: string; name: string; note: string | null; sort: number };
+export type Category = {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  note: string | null;
+  sort: number;
+  /** "07:00:00" style, India time. Null means all day. */
+  available_from: string | null;
+  available_to: string | null;
+};
 
 export type Option = { id: string; label: string; price: number };
 

@@ -224,3 +224,24 @@
     background: #fff;
   }
 }
+
+/* The order bar answers each add with a small nudge. */
+@keyframes bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.025);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.bump {
+  animation: bump 0.28s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bump {
+    animation: none;
+  }
+}

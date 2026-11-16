@@ -1,8 +1,8 @@
 import "server-only";
 import { z } from "zod";
-import { billFor, unitPrice } from "../rules";
+import { billFor, servingNow, unitPrice } from "../rules";
 import { adminClient } from "../supabase/server";
-import type { DiningTable, Line, LineStatus, Member, MenuItem, Order, Payment, Restaurant, Session } from "../types";
+import type { Category, DiningTable, Line, LineStatus, Member, MenuItem, Order, Payment, Restaurant, Session } from "../types";
 
 /**
  * Everything that changes a restaurant's day, run on the server after the caller has been
@@ -62,13 +62,15 @@ export async function placeOrder(r: Restaurant, session: Session, input: LineInp
   const ids = [...new Set(input.map((l) => l.itemId))];
   const { data: items } = await db().from("menu_items").select("*").eq("restaurant_id", r.id).in("id", ids);
   const byId = new Map(((items ?? []) as MenuItem[]).map((i) => [i.id, i]));
+  const { data: cats } = await db().from("categories").select("id, available_from, available_to").eq("restaurant_id", r.id);
+  const closed = new Set(((cats ?? []) as Pick<Category, "id" | "available_from" | "available_to">[]).filter((c) => !servingNow(c)).map((c) => c.id));
   const { count } = await db().from("orders").select("id", { count: "exact", head: true }).eq("session_id", session.id).not("confirmed_at", "is", null);
   const needsStaff = source === "qr" && r.confirm_first_order && !count;
   const status: LineStatus = needsStaff ? "pending" : "queued";
   const now = new Date().toISOString();
   const lines = input.flatMap((l) => {
     const item = byId.get(l.itemId);
-    if (!item || !item.available) return [];
+    if (!item || !item.available || closed.has(item.category_id)) return [];
     const variant = item.variants.find((v) => v.id === l.variantId);
     const addons = item.addons.filter((a) => l.addonIds.includes(a.id));
     return [

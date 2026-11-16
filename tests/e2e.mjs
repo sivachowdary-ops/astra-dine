@@ -66,8 +66,8 @@ try {
   // Customer scans table 3
   await phone.goto(`${base}/order/${table.qr_token}`, { waitUntil: "load" });
   ok(await until(() => phone.getByRole("heading", { name: "Biryani" }).isVisible()), "phone: menu opens from the QR");
-  await phone.getByRole("button", { name: "Add Chicken 65" }).click();
-  await phone.getByRole("button", { name: "Add Chicken dum biryani" }).click();
+  await phone.getByRole("button", { name: "Add Chicken 65" }).last().click();
+  await phone.getByRole("button", { name: "Add Chicken dum biryani" }).last().click();
   await phone.locator("label", { hasText: "Less spicy" }).click();
   await phone.getByRole("button", { name: /^Add, ₹/ }).click();
   await phone.getByRole("button", { name: /View order/ }).click();
@@ -147,7 +147,7 @@ try {
   await kitchen.getByRole("dialog").getByRole("button", { name: "Sold out" }).click();
   await kitchen.keyboard.press("Escape");
   await phone.goto(`${base}/order/${table.qr_token}`, { waitUntil: "load" });
-  ok(await until(() => phone.getByText("Sold out today").first().isVisible()), "phone: sold-out dish greys out");
+  ok(await until(() => phone.getByRole("button", { name: /^Apollo fish, .*sold out$/ }).isVisible()), "phone: sold-out dish greys out");
   await kitchen.getByRole("button", { name: /^Sold out/ }).click();
   await kitchen.getByRole("dialog").getByRole("searchbox").fill("apollo");
   await kitchen.getByRole("dialog").getByRole("button", { name: "Back on" }).click();
