@@ -42,8 +42,19 @@ const action = z.discriminatedUnion("type", [
     reward_text: z.string().trim().min(2).max(60),
     reward_value: z.number().int().min(0).max(10_000),
     google_review_url: z.string().trim().url().max(300).or(z.literal("")).nullish(),
+    tagline: z.string().trim().max(60).nullish(),
+    offer_title: z.string().trim().max(40).nullish(),
+    offer_text: z.string().trim().max(160).nullish(),
   }),
-  z.object({ type: z.literal("category"), id: uuid.optional(), name: z.string().trim().min(1).max(40), note: z.string().trim().max(60).nullish(), sort: z.number().int().optional() }),
+  z.object({
+    type: z.literal("category"),
+    id: uuid.optional(),
+    name: z.string().trim().min(1).max(40),
+    note: z.string().trim().max(60).nullish(),
+    sort: z.number().int().optional(),
+    // "HH:MM" in India time; both null means served all day.
+    hours: z.object({ from: z.string().regex(/^\d{2}:\d{2}$/).nullable(), to: z.string().regex(/^\d{2}:\d{2}$/).nullable() }).optional(),
+  }),
   z.object({ type: z.literal("deleteCategory"), id: uuid }),
   z.object({ type: z.literal("item"), item }),
   z.object({ type: z.literal("deleteItem"), id: uuid }),
@@ -71,11 +82,28 @@ export async function POST(req: Request) {
       case "settings": {
         const { type: _t, ...rest } = a;
         void _t;
-        await db().from("restaurants").update({ ...rest, upi_vpa: rest.upi_vpa || null, google_review_url: rest.google_review_url || null }).eq("id", r.id);
+        await db()
+          .from("restaurants")
+          .update({ ...rest, upi_vpa: rest.upi_vpa || null, google_review_url: rest.google_review_url || null, tagline: rest.tagline || null, offer_title: rest.offer_title || null, offer_text: rest.offer_text || null })
+          .eq("id", r.id);
         break;
       }
       case "category":
-        if (a.id) await own(db().from("categories").update({ name: a.name, note: a.note ?? null, ...(a.sort !== undefined ? { sort: a.sort } : {}) }).eq("id", a.id));
+        if (a.id) {
+          if (a.hours && Boolean(a.hours.from) !== Boolean(a.hours.to)) throw new OpError("Set both a start and an end time, or neither.");
+          if (a.hours?.from && a.hours.from === a.hours.to) throw new OpError("The start and end times are the same.");
+          await own(
+            db()
+              .from("categories")
+              .update({
+                name: a.name,
+                note: a.note ?? null,
+                ...(a.sort !== undefined ? { sort: a.sort } : {}),
+                ...(a.hours ? { available_from: a.hours.from, available_to: a.hours.to } : {}),
+              })
+              .eq("id", a.id),
+          );
+        }
         else {
           const { count } = await db().from("categories").select("id", { count: "exact", head: true }).eq("restaurant_id", r.id);
           await db().from("categories").insert({ restaurant_id: r.id, name: a.name, note: a.note ?? null, sort: count ?? 0 });

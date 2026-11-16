@@ -40,6 +40,14 @@ await db
     offer_text: "Andhra meals with a free spiced majjiga, Monday to Friday, 12 to 4 pm.",
   })
   .eq("id", r.id);
-await db.from("categories").update({ available_from: "07:00", available_to: "11:30" }).eq("restaurant_id", r.id).eq("name", "Tiffins");
-await db.from("categories").update({ available_from: "12:00", available_to: "16:00" }).eq("restaurant_id", r.id).eq("name", "Andhra meals");
+await db.from("categories").update({ available_from: "07:00", available_to: "11:30", note: null }).eq("restaurant_id", r.id).eq("name", "Tiffins");
+await db.from("categories").update({ available_from: "12:00", available_to: "16:00", note: null }).eq("restaurant_id", r.id).eq("name", "Andhra meals");
 console.log(`Kaaram Kitchen: ${n} dish photos, cover, logo, offer and serving hours set.`);
+
+// Public "try it" tables for the sales page. A simulated crew serves them (src/lib/server/showcase.ts).
+for (let i = 1; i <= 6; i++) {
+  const label = `T${i}`;
+  const { data: has } = await db.from("dining_tables").select("id").eq("restaurant_id", r.id).eq("label", label).maybeSingle();
+  if (!has) await db.from("dining_tables").insert({ restaurant_id: r.id, label, area: "Try it", seats: 4, sort: 100 + i });
+}
+console.log("Try-it tables T1 to T6 ready.");

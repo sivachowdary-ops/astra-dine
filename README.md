@@ -9,6 +9,7 @@ Four separate apps in one codebase, each with its own address and its own sign-i
 | Kitchen display | `/kitchen` | Kitchen tablet or TV | Restaurant code, username, password |
 | Cashier | `/pos` | Counter computer or tablet | Restaurant code, username, password |
 | Admin dashboard | `/admin` | Owner and managers | Email and password; new restaurants sign up here |
+| Sales page | `/` | Restaurant owners (ads, walk-ins) | None |
 
 After a domain is bought, each app can have its own subdomain (`order.`, `kitchen.`, `pos.`,
 `admin.`) pointing at the same deployment.
@@ -19,11 +20,27 @@ After a domain is bought, each app can have its own subdomain (`order.`, `kitche
 2. `npm install`
 3. `npm run db:migrate` creates the tables, security rules, report functions and the photo bucket.
 4. `npm run db:seed` creates the showcase restaurant, Kaaram Kitchen, with its menu, 32 tables,
-   members and 60 days of past bills. Its logins are written to `demo-logins.local.txt`.
+   members and 60 days of past bills, then adds its photos, cover, logo, offer, serving hours and
+   the six "Try it" tables. Its logins are written to `demo-logins.local.txt`.
 5. `npm run dev` (port 3106). Phones on the same Wi-Fi can scan the table QR codes; a public
    deployment makes them work anywhere.
 
 Optional: set `SIGNUP_CODE` so only people with the code can create a restaurant.
+
+Before a demo, run `npm run db:fill`. It adds the bills Kaaram Kitchen would have taken since the
+last sample bill, so Today and Reports look like a working restaurant. It is safe to run again;
+once deployed, run it daily from a scheduler.
+
+## The sales page and "Try it"
+
+`/` is the product page for restaurant owners: the problems it fixes, the four screens, how
+payments work, and a live demo. Its QR code (and the "Open a demo table" button) goes to `/try`,
+which seats the visitor at a free table T1 to T6 at Kaaram Kitchen. On those tables only, a
+simulated crew (`src/lib/server/showcase.ts`) confirms, cooks, serves and takes payment in about
+a minute, and the page shows the tickets live from `/api/showcase/live` (dishes and statuses, no
+guest details). Numbers that don't start with 5 joined on the demo tables are deleted within the
+hour. Screenshots on the page live in `public/showcase/`; retake them with `tests/menu-look.mjs`,
+`tests/staff-look.mjs` and `tests/admin-look.mjs`.
 
 ## How it fits together
 

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
-    "db:media": "node scripts/showcase-media.mjs"
+    "db:media": "node scripts/showcase-media.mjs",
+    "db:fill": "node scripts/showcase-fill.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

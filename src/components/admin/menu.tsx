@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ImagePlus, Plus, Trash2 } from "lucide-react";
+import { Clock3, ImagePlus, Plus, Trash2 } from "lucide-react";
 import { call, useLive } from "@/lib/live";
-import { inr, stationNames } from "@/lib/rules";
+import { hoursLabel, inr, stationNames } from "@/lib/rules";
 import { browserClient } from "@/lib/supabase/browser";
 import type { Category, MenuItem, Option, Restaurant } from "@/lib/types";
 import { DietMark, Sheet } from "../bits";
@@ -77,7 +77,8 @@ export function MenuSection({ restaurant: r }: { restaurant: Restaurant }) {
               <h2 className="dish text-xl">
                 {c.name} {c.note ? <span className="text-muted text-sm font-normal">{c.note}</span> : null}
               </h2>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap items-center gap-1">
+                <Hours category={c} save={(hours) => admin({ type: "category", id: c.id, name: c.name, note: c.note, hours }, hours.from ? `${c.name}: served ${hoursLabel({ available_from: hours.from, available_to: hours.to })}.` : `${c.name}: served all day.`)} />
                 <button
                   type="button"
                   className="btn btn-quiet !min-h-9 text-sm"
@@ -356,5 +357,52 @@ function ItemEditor({ item, categories, onClose, onSaved }: { item: Partial<Menu
       <OptionsEditor label="Sizes" hint="Like Half and Full. Each size has its own full price. Leave empty if there's one size." value={f.variants} onChange={(v) => set("variants", v)} />
       <OptionsEditor label="Extras" hint="Added on top of the price, like Extra raita +₹30." value={f.addons} onChange={(v) => set("addons", v)} />
     </Sheet>
+  );
+}
+
+/** When a menu section is served. Outside these hours guests see it greyed out and can't order it. */
+function Hours({ category: c, save }: { category: Category; save: (h: { from: string | null; to: string | null }) => Promise<string | null | undefined> }) {
+  const [open, setOpen] = useState(false);
+  const [from, setFrom] = useState(c.available_from?.slice(0, 5) ?? "07:00");
+  const [to, setTo] = useState(c.available_to?.slice(0, 5) ?? "11:30");
+  const label = hoursLabel(c);
+  if (!open) {
+    return (
+      <button type="button" className="btn btn-quiet !min-h-9 text-sm" onClick={() => setOpen(true)} aria-label={`Serving hours for ${c.name}: ${label ?? "all day"}. Change`}>
+        <Clock3 className="size-4" aria-hidden="true" />
+        {label ?? "All day"}
+      </button>
+    );
+  }
+  return (
+    <form
+      className="bg-card border-line flex flex-wrap items-center gap-2 rounded-lg border p-2 text-sm"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!(await save({ from, to }))) setOpen(false);
+      }}
+    >
+      <label className="flex items-center gap-1">
+        From <input type="time" className="field !h-9 !w-auto !py-0" value={from} onChange={(e) => setFrom(e.target.value)} required />
+      </label>
+      <label className="flex items-center gap-1">
+        to <input type="time" className="field !h-9 !w-auto !py-0" value={to} onChange={(e) => setTo(e.target.value)} required />
+      </label>
+      <button type="submit" className="btn btn-primary !min-h-9 text-sm">
+        Save
+      </button>
+      <button
+        type="button"
+        className="btn btn-quiet !min-h-9 text-sm"
+        onClick={async () => {
+          if (!(await save({ from: null, to: null }))) setOpen(false);
+        }}
+      >
+        All day
+      </button>
+      <button type="button" className="btn btn-quiet !min-h-9 text-sm" onClick={() => setOpen(false)}>
+        Cancel
+      </button>
+    </form>
   );
 }

@@ -21,6 +21,8 @@ const csp = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Screenshots for the sales page are taken from the dev server; keep its badge out of them.
+  devIndicators: false,
   // Phones on the same Wi-Fi can open the dev server by its network address.
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"],
   turbopack: {
@@ -41,9 +43,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  async redirects() {
-    return [{ source: "/", destination: "/admin", permanent: false }];
   },
 };
 

@@ -10,7 +10,8 @@ const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
 const errors = [];
 p.on("pageerror", (e) => errors.push(e.message));
 p.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-await p.goto(base + "/admin", { waitUntil: "load" });
+await p.goto(base + "/admin", { waitUntil: "networkidle" });
+await p.waitForTimeout(1500); // let the form hydrate before typing
 await p.screenshot({ path: "test-results/a-login.png" });
 await p.getByLabel("Email").fill(email);
 await p.getByLabel("Password").fill(password);

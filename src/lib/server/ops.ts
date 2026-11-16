@@ -103,7 +103,7 @@ export async function placeOrder(r: Restaurant, session: Session, input: LineInp
   return { order, needsStaff };
 }
 
-export async function confirmOrder(orderId: string, restaurantId: string, by: string, accept: boolean) {
+export async function confirmOrder(orderId: string, restaurantId: string, by: string | null, accept: boolean) {
   const now = new Date().toISOString();
   const { data: order } = await db().from("orders").select("*").eq("id", orderId).eq("restaurant_id", restaurantId).maybeSingle<Order>();
   if (!order) throw new OpError("Order not found.");
@@ -167,7 +167,7 @@ export async function addPayment(r: Restaurant, session: Session, p: { mode: Pay
   await settleIfPaid(r, session.id);
 }
 
-export async function reviewPayment(r: Restaurant, paymentId: string, ok: boolean, by: string) {
+export async function reviewPayment(r: Restaurant, paymentId: string, ok: boolean, by: string | null) {
   const { data: pay } = await db().from("payments").select("*").eq("id", paymentId).eq("restaurant_id", r.id).maybeSingle<Payment>();
   if (!pay) throw new OpError("Payment not found.");
   await db().from("payments").update({ status: ok ? "confirmed" : "rejected", confirmed_by: by }).eq("id", paymentId);

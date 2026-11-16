@@ -14,6 +14,7 @@ import {
   sessionDetail,
   tableByToken,
 } from "@/lib/server/ops";
+import { advanceTryTables, isTryTable } from "@/lib/server/showcase";
 import type { Category, Feedback, Member, MenuItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   const found = await tableByToken(token);
   if (!found) return Response.json({ error: "This table's QR code isn't active. Please ask the staff." }, { status: 404 });
   const { table, restaurant: r } = found;
+  const demo = isTryTable(r, table);
+  if (demo) await advanceTryTables();
   const [{ data: categories }, { data: items }, session] = await Promise.all([
     db().from("categories").select("*").eq("restaurant_id", r.id).order("sort"),
     db().from("menu_items").select("*").eq("restaurant_id", r.id).order("sort"),
@@ -72,6 +75,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
         offer_text: r.offer_text,
       },
       table: { label: table.label, area: table.area },
+      demo,
       categories: (categories ?? []) as Category[],
       items: ((items ?? []) as MenuItem[]).map(({ id, category_id, name, local_name, description, price, diet, spice, prep_minutes, tags, variants, addons, serves, image_url, available }) => ({
         id, category_id, name, local_name, description, price, diet, spice, prep_minutes, tags, variants, addons, serves, image_url, available,

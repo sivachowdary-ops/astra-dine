@@ -43,6 +43,8 @@ type View = {
     offer_text: string | null;
   };
   table: { label: string; area: string };
+  /** A public try-it table: staff are simulated. */
+  demo?: boolean;
   categories: Category[];
   items: Item[];
   visit: null | {
@@ -247,6 +249,11 @@ export function OrderApp({ token }: { token: string }) {
               Call
             </button>
           </div>
+        ) : null}
+        {data.demo ? (
+          <p className="bg-indigo-tint text-indigo mx-4 mt-2 rounded-lg px-3 py-1.5 text-sm" role="note">
+            <b>Demo table.</b> A pretend crew confirms, cooks and serves your order in about a minute. Nothing is cooked or charged.
+          </p>
         ) : null}
         {v?.calls.length ? (
           <p className="bg-turmeric-tint text-turmeric-ink mx-4 mt-2 rounded-lg px-3 py-1.5 text-sm font-bold" role="status">
@@ -953,7 +960,9 @@ function TableView({
                   Pay {inr(bill.due)}
                 </button>
               ) : (
-                <p className="text-ink-2 mt-3 text-sm">Please pay at the counter, or ask for the card machine. Staff have your bill.</p>
+                <p className="text-ink-2 mt-3 text-sm">
+                  {data.demo ? "Demo: the cashier takes the payment in a few seconds, then your stamp and the feedback card appear." : "Please pay at the counter, or ask for the card machine. Staff have your bill."}
+                </p>
               )
             ) : bill.claimed ? (
               <p className="text-turmeric-ink mt-3 text-sm font-bold">Thanks! The cashier is confirming your UPI payment.</p>
@@ -1184,6 +1193,7 @@ function JoinSheet({ data, onClose, send, say }: { data: View; onClose: () => vo
           say("You're in. This visit's stamp goes on your card when you pay.");
         }}
       >
+        {data.demo ? <p className="bg-indigo-tint text-indigo mb-3 rounded-lg p-2.5 text-sm">Demo table: use a sample number such as 55500 12345. Any other number is deleted within the hour.</p> : null}
         <p className="text-ink-2">
           Every visit over {inr(data.restaurant.stamp_min_bill)} earns a stamp. {data.restaurant.stamps_for_reward} stamps get you a {data.restaurant.reward_text.toLowerCase()}.
         </p>

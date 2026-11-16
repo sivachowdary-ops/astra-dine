@@ -23,7 +23,7 @@ const sections = [
   { id: "reports", label: "Reports" },
   { id: "settings", label: "Settings" },
 ] as const;
-type Section = (typeof sections)[number]["id"];
+export type Section = (typeof sections)[number]["id"];
 
 /** The owner's control centre. Every change here reaches the tables, kitchen and cashier at once. */
 export function AdminApp({ restaurant, staff }: { restaurant: Restaurant; staff: Staff }) {
@@ -59,7 +59,7 @@ export function AdminApp({ restaurant, staff }: { restaurant: Restaurant; staff:
         </div>
       </aside>
       <div className="min-w-0 p-4 lg:p-8">
-        {section === "today" ? <TodaySection {...props} /> : null}
+        {section === "today" ? <TodaySection {...props} go={setSection} /> : null}
         {section === "menu" ? <MenuSection {...props} /> : null}
         {section === "tables" ? <TablesSection {...props} /> : null}
         {section === "staff" ? <StaffSection {...props} /> : null}
