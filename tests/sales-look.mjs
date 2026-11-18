@@ -9,13 +9,22 @@ for (const [name, viewport] of [["desk", { width: 1440, height: 900 }], ["phone"
   p.on("pageerror", (e) => errors.push(e.message));
   p.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await p.goto(base + "/", { waitUntil: "load" });
+  await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); } window.scrollTo(0, 0); });
   await p.waitForTimeout(3500);
   await p.screenshot({ path: `test-results/sales-${name}.png` });
   await p.evaluate(() => window.scrollTo(0, 600));
   await p.waitForTimeout(400);
   await p.screenshot({ path: `test-results/sales-${name}-2.png` });
   await p.screenshot({ path: `test-results/sales-${name}-full.png`, fullPage: true });
-  await p.locator("#try").scrollIntoViewIfNeeded();
+  if (await p.locator("#evening").count()) {
+    await p.locator("#evening").evaluate((e) => e.scrollIntoView());
+    await p.waitForTimeout(600);
+    await p.screenshot({ path: `test-results/sales-${name}-evening.png` });
+    await p.evaluate(() => window.scrollBy(0, 900));
+    await p.waitForTimeout(600);
+    await p.screenshot({ path: `test-results/sales-${name}-evening-2.png` });
+  }
+  await p.locator("#try").evaluate((e) => e.scrollIntoView());
   await p.waitForTimeout(800);
   await p.screenshot({ path: `test-results/sales-${name}-try.png` });
   const axe = await new AxeBuilder({ page: p }).analyze();

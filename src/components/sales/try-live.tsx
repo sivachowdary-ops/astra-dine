@@ -55,8 +55,8 @@ export function TryLivePanel() {
       </div>
 
       <div className="p-4">
-        <h3 className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-white/55 uppercase">
-          <ReceiptText className="size-3.5" aria-hidden="true" /> Cashier: demo tables
+        <h3 className="flex items-center gap-2 text-sm font-bold text-white/70">
+          <ReceiptText className="size-3.5" aria-hidden="true" /> The cashier sees the demo tables
         </h3>
         <ul className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {(data?.tables ?? Array.from({ length: 6 }, (_, i) => ({ label: `T${i + 1}`, status: "free", since: null, total: 0, tickets: [] }))).map((t) => (
@@ -73,8 +73,8 @@ export function TryLivePanel() {
           ))}
         </ul>
 
-        <h3 className="mt-5 flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-white/55 uppercase">
-          <ChefHat className="size-3.5" aria-hidden="true" /> Kitchen screen
+        <h3 className="mt-5 flex items-center gap-2 text-sm font-bold text-white/70">
+          <ChefHat className="size-3.5" aria-hidden="true" /> The kitchen screen
         </h3>
         {tickets.length ? (
           <ol className="mt-2 grid gap-2 sm:grid-cols-2" aria-live="polite">
