@@ -58,7 +58,10 @@ begin
   insert into orders (id, restaurant_id, session_id, kot, source, placed_at, confirmed_at)
     select mo.new, dst, ms.new, o.kot, o.source, o.placed_at, o.confirmed_at from orders o join m_ord mo on mo.old = o.id join m_ses ms on ms.old = o.session_id;
   insert into order_lines (restaurant_id, order_id, session_id, item_id, name, variant, addons, qty, unit_price, note, station, status, created_at, fired_at, ready_at, served_at)
-    select dst, mo.new, ms.new, mi.new, l.name, l.variant, l.addons, l.qty, l.unit_price, l.note, l.station, l.status, l.created_at, l.fired_at, l.ready_at, l.served_at
+    -- History is history: every dish on a closed bill was served (or cancelled).
+    select dst, mo.new, ms.new, mi.new, l.name, l.variant, l.addons, l.qty, l.unit_price, l.note, l.station,
+      case when l.status in ('cancelled', 'pending') then 'cancelled' else 'served' end,
+      l.created_at, l.fired_at, coalesce(l.ready_at, l.fired_at), coalesce(l.served_at, l.ready_at, l.fired_at)
     from order_lines l join m_ord mo on mo.old = l.order_id join m_ses ms on ms.old = l.session_id left join m_item mi on mi.old = l.item_id;
   insert into payments (restaurant_id, session_id, mode, amount, status, ref, at)
     select dst, ms.new, p.mode, p.amount, p.status, p.ref, p.at from payments p join m_ses ms on ms.old = p.session_id;

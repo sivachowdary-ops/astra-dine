@@ -47,8 +47,9 @@ export function KitchenApp({ restaurant, staff }: { restaurant: Restaurant; staf
   const tickets = useMemo(() => {
     if (!data) return [];
     const tableOf = new Map(data.sessions.map((s) => [s.id, data.tables.find((t) => t.id === s.table_id)?.label ?? "?"]));
+    // Only tables still in the restaurant: a closed bill's leftover lines are not the kitchen's job.
     return data.orders
-      .filter((o) => o.confirmed_at)
+      .filter((o) => o.confirmed_at && tableOf.has(o.session_id))
       .map((o) => ({ order: o, table: tableOf.get(o.session_id) ?? "?", lines: data.lines.filter((l) => l.order_id === o.id && (station === "all" || l.station === station)) }))
       .filter((t) => t.lines.some((l) => l.status === "queued" || l.status === "cooking"))
       .sort((a, b) => (a.order.confirmed_at ?? "").localeCompare(b.order.confirmed_at ?? ""));

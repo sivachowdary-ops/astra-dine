@@ -14,8 +14,8 @@ const tooMany = (ip: string) => {
 /** Makes a private copy of the sample restaurant and signs this browser in as its owner. */
 export async function POST(req: Request) {
   const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "local";
-  // Requests with no forwarded address only happen on a developer's own machine.
-  if (ip !== "local" && tooMany(ip)) return Response.json({ error: "You've made a few copies already. Use the one you have, or try again in an hour." }, { status: 429 });
+  // Requests from this machine itself (no address, or loopback) are a developer testing.
+  if (!["local", "::1", "127.0.0.1", "::ffff:127.0.0.1"].includes(ip) && tooMany(ip)) return Response.json({ error: "You've made a few copies already. Use the one you have, or try again in an hour." }, { status: 429 });
   try {
     const t = await createTrial();
     await signInAs(t.ownerId);
