@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Ban, Search } from "lucide-react";
+import { Ban, Search, Volume2, VolumeX } from "lucide-react";
+import { useNewItems, useSound, useTitleCount } from "@/lib/chime";
 import { call, useLive, useNow } from "@/lib/live";
 import { clock, stationNames } from "@/lib/rules";
 import { browserClient } from "@/lib/supabase/browser";
@@ -52,6 +53,12 @@ export function KitchenApp({ restaurant, staff }: { restaurant: Restaurant; staf
       .sort((a, b) => (a.order.confirmed_at ?? "").localeCompare(b.order.confirmed_at ?? ""));
   }, [data, station]);
 
+  // A chime for every new ticket, and the count of tickets not started yet in the tab title.
+  const sound = useSound("kitchen");
+  useNewItems(data ? data.orders.filter((o) => o.confirmed_at).map((o) => o.id) : null, () => sound.play("ticket"));
+  const waiting = tickets.filter((t) => t.lines.every((l) => l.status === "queued")).length;
+  useTitleCount(waiting, "Kitchen · Astra Dine");
+
   const allDay = useMemo(() => {
     const m = new Map<string, number>();
     for (const t of tickets) for (const l of t.lines) if (l.status === "queued" || l.status === "cooking") m.set(l.name, (m.get(l.name) ?? 0) + l.qty);
@@ -79,6 +86,15 @@ export function KitchenApp({ restaurant, staff }: { restaurant: Restaurant; staf
           {online ? "Live" : "Reconnecting…"}
         </span>
         <span className="num ml-auto text-2xl font-bold">{new Date(now).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}</span>
+        <button
+          type="button"
+          onClick={sound.toggle}
+          aria-pressed={sound.on}
+          className={`flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-bold ${sound.on ? "bg-white/10 text-white" : "bg-turmeric text-[#1a1200]"}`}
+        >
+          {sound.on ? <Volume2 className="size-4" aria-hidden="true" /> : <VolumeX className="size-4" aria-hidden="true" />}
+          {sound.on ? "Sound on" : "Turn sound on"}
+        </button>
         <SignOut className="rounded-lg px-3 py-2 text-sm text-white/70 hover:bg-white/10" />
       </header>
 

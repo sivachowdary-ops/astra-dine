@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BellRing, Check, Gift, Minus, Plus, Printer, Search, X } from "lucide-react";
+import { BellRing, Check, Gift, Minus, Plus, Printer, Search, Volume2, VolumeX, X } from "lucide-react";
+import { useNewItems, useSound, useTitleCount } from "@/lib/chime";
 import { call, useLive, useNow } from "@/lib/live";
 import { ago, billFor, inr, minsSince } from "@/lib/rules";
 import { browserClient } from "@/lib/supabase/browser";
@@ -108,6 +109,13 @@ export function PosApp({ restaurant: r, staff }: { restaurant: Restaurant; staff
     };
   }, [data]);
 
+  // Different chimes for a QR order to confirm, a table calling, and a UPI payment to check.
+  const sound = useSound("pos");
+  useNewItems(view ? view.pending.map((o) => o.id) : null, () => sound.play("confirm"));
+  useNewItems(data ? data.calls.map((c) => c.id) : null, () => sound.play("call"));
+  useNewItems(view ? view.claimed.map((p) => p.id) : null, () => sound.play("payment"));
+  useTitleCount(view ? view.pending.length + (data?.calls.length ?? 0) + view.claimed.length : 0, "Cashier · Astra Dine");
+
   if (!data || !view) return <main className="grid min-h-dvh place-items-center text-muted">Loading the floor…</main>;
   const takings = data.today.reduce((s, x) => s + (x.total ?? 0), 0);
   const byMode = data.today.flatMap((x) => x.payments).filter((p) => p.status === "confirmed").reduce((m, p) => ((m[p.mode] = (m[p.mode] ?? 0) + p.amount), m), {} as Record<string, number>);
@@ -127,6 +135,10 @@ export function PosApp({ restaurant: r, staff }: { restaurant: Restaurant; staff
         <span className="text-ink-2 ml-auto text-sm">
           Today <b className="num">{inr(takings)}</b> from {data.today.length} bills
         </span>
+        <button type="button" onClick={sound.toggle} aria-pressed={sound.on} className={`btn !min-h-10 text-sm ${sound.on ? "btn-quiet" : "btn-turmeric"}`}>
+          {sound.on ? <Volume2 className="size-4" aria-hidden="true" /> : <VolumeX className="size-4" aria-hidden="true" />}
+          {sound.on ? "Sound on" : "Turn sound on"}
+        </button>
         <button type="button" className="btn btn-line !min-h-10 text-sm" onClick={() => setGiftOpen(true)}>
           <Gift className="size-4" aria-hidden="true" />
           Sell gift card
