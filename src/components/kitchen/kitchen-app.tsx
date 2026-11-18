@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Ban, Search, Volume2, VolumeX } from "lucide-react";
 import { useNewItems, useSound, useTitleCount } from "@/lib/chime";
+import { useTrialPulse } from "../trial-panel";
 import { call, useLive, useNow } from "@/lib/live";
 import { clock, stationNames } from "@/lib/rules";
 import { browserClient } from "@/lib/supabase/browser";
@@ -55,6 +56,7 @@ export function KitchenApp({ restaurant, staff }: { restaurant: Restaurant; staf
 
   // A chime for every new ticket, and the count of tickets not started yet in the tab title.
   const sound = useSound("kitchen");
+  useTrialPulse(restaurant);
   useNewItems(data ? data.orders.filter((o) => o.confirmed_at).map((o) => o.id) : null, () => sound.play("ticket"));
   const waiting = tickets.filter((t) => t.lines.every((l) => l.status === "queued")).length;
   useTitleCount(waiting, "Kitchen · Astra Dine");

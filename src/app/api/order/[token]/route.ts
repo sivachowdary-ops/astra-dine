@@ -15,6 +15,7 @@ import {
   tableByToken,
 } from "@/lib/server/ops";
 import { advanceTryTables, isTryTable } from "@/lib/server/showcase";
+import { pumpTrial } from "@/lib/server/trial";
 import type { Category, Feedback, Member, MenuItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   const { table, restaurant: r } = found;
   const demo = isTryTable(r, table);
   if (demo) await advanceTryTables();
+  // A guest at a trial copy's table keeps that copy busy too.
+  if (r.expires_at) void pumpTrial(r);
   const [{ data: categories }, { data: items }, session] = await Promise.all([
     db().from("categories").select("*").eq("restaurant_id", r.id).order("sort"),
     db().from("menu_items").select("*").eq("restaurant_id", r.id).order("sort"),

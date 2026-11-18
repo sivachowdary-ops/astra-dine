@@ -11,6 +11,7 @@ import { SettingsSection } from "./settings";
 import { StaffSection } from "./staff";
 import { TablesSection } from "./tables";
 import { TodaySection } from "./today";
+import { TrialPanel } from "../trial-panel";
 
 const sections = [
   { id: "today", label: "Today" },
@@ -58,7 +59,8 @@ export function AdminApp({ restaurant, staff }: { restaurant: Restaurant; staff:
           <SignOut className="text-muted text-sm underline underline-offset-2" />
         </div>
       </aside>
-      <div className="min-w-0 p-4 lg:p-8">
+      <main className="min-w-0 p-4 lg:p-8">
+        {restaurant.expires_at ? <TrialPanel restaurant={restaurant} /> : null}
         {section === "today" ? <TodaySection {...props} go={setSection} /> : null}
         {section === "menu" ? <MenuSection {...props} /> : null}
         {section === "tables" ? <TablesSection {...props} /> : null}
@@ -68,7 +70,7 @@ export function AdminApp({ restaurant, staff }: { restaurant: Restaurant; staff:
         {section === "feedback" ? <FeedbackSection {...props} /> : null}
         {section === "reports" ? <ReportsSection {...props} /> : null}
         {section === "settings" ? <SettingsSection {...props} /> : null}
-      </div>
+      </main>
     </div>
   );
 }

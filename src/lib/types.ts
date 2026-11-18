@@ -26,6 +26,8 @@ export type Restaurant = {
   tagline: string | null;
   offer_title: string | null;
   offer_text: string | null;
+  /** Set on a visitor's private trial copy: when it is deleted. */
+  expires_at?: string | null;
 };
 
 export type Staff = { user_id: string; restaurant_id: string; name: string; username: string; role: Role; active: boolean };

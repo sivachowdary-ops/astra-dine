@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { BellRing, Check, Gift, Minus, Plus, Printer, Search, Volume2, VolumeX, X } from "lucide-react";
 import { useNewItems, useSound, useTitleCount } from "@/lib/chime";
+import { useTrialPulse } from "../trial-panel";
 import { call, useLive, useNow } from "@/lib/live";
 import { ago, billFor, inr, minsSince } from "@/lib/rules";
 import { browserClient } from "@/lib/supabase/browser";
@@ -111,6 +112,7 @@ export function PosApp({ restaurant: r, staff }: { restaurant: Restaurant; staff
 
   // Different chimes for a QR order to confirm, a table calling, and a UPI payment to check.
   const sound = useSound("pos");
+  useTrialPulse(r);
   useNewItems(view ? view.pending.map((o) => o.id) : null, () => sound.play("confirm"));
   useNewItems(data ? data.calls.map((c) => c.id) : null, () => sound.play("call"));
   useNewItems(view ? view.claimed.map((p) => p.id) : null, () => sound.play("payment"));

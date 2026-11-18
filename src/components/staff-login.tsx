@@ -28,6 +28,13 @@ export function StaffLogin({ app, title, dark = false }: { app: "kitchen" | "pos
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Arrived from a trial QR that was already used.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      if (new URLSearchParams(window.location.search).get("link") === "used") setError("That QR code was already used or has run out. Make a new one from the owner dashboard.");
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
