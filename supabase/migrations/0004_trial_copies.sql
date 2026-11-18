@@ -18,7 +18,7 @@ alter table trial_tokens enable row level security;
 -- giving every row a new id. Only the server (service role) calls it.
 create or replace function clone_restaurant(src uuid, dst uuid, days int) returns int
 language plpgsql as $$
-declare n int;
+declare n int; shift interval;
 begin
   update restaurants d set
     name = s.name, place = s.place, gstin = s.gstin, gst_pct = s.gst_pct, upi_vpa = null, upi_name = s.upi_name,
@@ -69,6 +69,24 @@ begin
     select dst, code, value, balance, from_name, to_name, issued_at from gift_cards where restaurant_id = src;
   insert into campaigns (restaurant_id, name, segment, message, recipients, created_at)
     select dst, name, segment, message, recipients, created_at from campaigns where restaurant_id = src;
+
+  -- Bring the history up to today by whole days (lunch stays at lunchtime), so "Today" in the copy
+  -- looks like a normal day so far; anything that would land in the future is dropped.
+  -- Line up the latest full day of trading (30 or more bills) with today; stray recent bills
+  -- (tests, one-off visitors) don't count as a day.
+  select date_trunc('day', now() at time zone 'Asia/Kolkata') - d into shift from (
+    select date_trunc('day', paid_at at time zone 'Asia/Kolkata') as d, count(*) as c
+    from table_sessions where restaurant_id = dst and paid_at is not null group by 1
+  ) x where c >= 30 order by d desc limit 1;
+  if shift is not null and shift > interval '0' then
+    update table_sessions set opened_at = opened_at + shift, bill_requested_at = bill_requested_at + shift, paid_at = paid_at + shift, closed_at = closed_at + shift where restaurant_id = dst;
+    update orders set placed_at = placed_at + shift, confirmed_at = confirmed_at + shift where restaurant_id = dst;
+    update order_lines set created_at = created_at + shift, fired_at = fired_at + shift, ready_at = ready_at + shift, served_at = served_at + shift where restaurant_id = dst;
+    update payments set at = at + shift where restaurant_id = dst;
+    update feedback set at = at + shift where restaurant_id = dst;
+    update members set last_visit = last_visit + shift where restaurant_id = dst and last_visit is not null;
+    delete from table_sessions where restaurant_id = dst and (opened_at > now() or paid_at > now());
+  end if;
   return n;
 end $$;
 revoke execute on function clone_restaurant(uuid, uuid, int) from public, anon, authenticated;
