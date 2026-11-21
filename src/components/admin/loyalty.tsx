@@ -21,9 +21,15 @@ async function loadMembers(rid: string) {
 }
 
 export function LoyaltySection({ restaurant: r }: { restaurant: Restaurant }) {
-  const { data } = useLive(r.id, ["table_sessions"], () => loadMembers(r.id));
+  const { data, reload } = useLive(r.id, ["table_sessions"], () => loadMembers(r.id));
   const now = useNow(60_000);
   const [q, setQ] = useState("");
+  const [note, setNote] = useState<{ text: string; ok: boolean } | null>(null);
+  const act = async (body: object, done: string) => {
+    const { error } = await call("/api/admin", body);
+    setNote({ text: error ?? done, ok: !error });
+    if (!error) reload();
+  };
   if (!data) return <p className="text-muted">Loading members…</p>;
   const { members, gifts } = data;
   const repeat = members.filter((m) => m.visits >= 2).length;
@@ -38,7 +44,19 @@ export function LoyaltySection({ restaurant: r }: { restaurant: Restaurant }) {
         <Figure k="Rewards waiting" v={String(members.reduce((s, m) => s + m.rewards_ready, 0))} sub="earned, not yet used" />
         <Figure k="Gift card balance" v={inr(gifts.reduce((s, g) => s + g.balance, 0))} sub={`${gifts.length} cards sold: food you owe`} />
       </dl>
-      <div className="relative mt-6 max-w-sm">
+      <p className="text-ink-2 mt-6 max-w-2xl text-sm">
+        If a guest asks you to stop offers or forget them, use the buttons on their row. Deleting removes their number, name, stamps and rewards. See the{" "}
+        <a href="/privacy" target="_blank" className="text-indigo font-bold underline">
+          privacy policy
+        </a>{" "}
+        guests are shown.
+      </p>
+      {note ? (
+        <p role="status" className={`mt-2 text-sm font-bold ${note.ok ? "text-leaf" : "text-madder"}`}>
+          {note.text}
+        </p>
+      ) : null}
+      <div className="relative mt-4 max-w-sm">
         <Search className="text-muted pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
         <input type="search" className="field !pl-9" placeholder="Name or phone" aria-label="Search members" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
@@ -53,6 +71,9 @@ export function LoyaltySection({ restaurant: r }: { restaurant: Restaurant }) {
               <th scope="col">Card</th>
               <th scope="col">Last visit</th>
               <th scope="col">Offers</th>
+              <th scope="col">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -68,11 +89,26 @@ export function LoyaltySection({ restaurant: r }: { restaurant: Restaurant }) {
                 </td>
                 <td>{m.last_visit ? `${Math.round((now - new Date(m.last_visit).getTime()) / DAY)} days ago` : "–"}</td>
                 <td>{m.opt_in ? "Yes" : "No"}</td>
+                <td className="whitespace-nowrap text-right">
+                  {m.opt_in ? (
+                    <button type="button" className="btn btn-quiet !min-h-9 !px-2.5 text-sm" aria-label={`Stop offers for ${m.name ?? m.phone}`} onClick={() => void act({ type: "memberOffersOff", id: m.id }, "Offers stopped for this member.")}>
+                      Stop offers
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="btn btn-quiet text-madder !min-h-9 !px-2.5 text-sm"
+                    aria-label={`Delete ${m.name ?? m.phone} and their details`}
+                    onClick={() => window.confirm(`Delete ${m.name ?? m.phone}'s card, phone number and name? Their stamps and rewards go too. Past bills stay, without their details.`) && void act({ type: "deleteMember", id: m.id }, "Member and their details deleted.")}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
             {!shown.length ? (
               <tr>
-                <td colSpan={7} className="text-muted py-6 text-center">
+                <td colSpan={8} className="text-muted py-6 text-center">
                   {members.length ? "Nobody matches." : "No members yet. Guests join from their phone at the table, or the cashier adds their number."}
                 </td>
               </tr>

@@ -66,6 +66,8 @@ const action = z.discriminatedUnion("type", [
   z.object({ type: z.literal("staff"), name: z.string().trim().min(1).max(60), username: z.string().trim().regex(/^[a-z0-9._-]{3,24}$/i), role: z.enum(["manager", "cashier", "kitchen"]), password: z.string().min(6).max(72) }),
   z.object({ type: z.literal("staffUpdate"), userId: uuid, active: z.boolean().optional(), password: z.string().min(6).max(72).optional(), role: z.enum(["manager", "cashier", "kitchen"]).optional() }),
   z.object({ type: z.literal("feedbackHandled"), id: uuid }),
+  z.object({ type: z.literal("memberOffersOff"), id: uuid }),
+  z.object({ type: z.literal("deleteMember"), id: uuid }),
   z.object({ type: z.literal("campaign"), name: z.string().trim().min(1).max(80), segment: z.string().max(40), message: z.string().trim().min(1).max(600), recipients: z.number().int().min(0).max(1_000_000) }),
 ]);
 
@@ -178,6 +180,21 @@ export async function POST(req: Request) {
       case "feedbackHandled":
         await own(db().from("feedback").update({ handled: true }).eq("id", a.id));
         break;
+      case "memberOffersOff":
+        await own(db().from("members").update({ opt_in: false }).eq("id", a.id));
+        break;
+      case "deleteMember": {
+        // A guest asked to be forgotten: unlink their past visits (bills stay, without the name
+        // or number), then delete the card with their phone number, name and birthday.
+        const { data: m } = await db().from("members").select("id").eq("id", a.id).eq("restaurant_id", r.id).maybeSingle();
+        if (!m) throw new OpError("Member not found.");
+        const { data: visits } = await db().from("table_sessions").select("id").eq("restaurant_id", r.id).eq("member_id", a.id);
+        const ids = ((visits ?? []) as { id: string }[]).map((v) => v.id);
+        if (ids.length) await db().from("feedback").update({ guest_name: null }).eq("restaurant_id", r.id).in("session_id", ids);
+        await db().from("table_sessions").update({ member_id: null }).eq("restaurant_id", r.id).eq("member_id", a.id);
+        await db().from("members").delete().eq("restaurant_id", r.id).eq("id", a.id);
+        break;
+      }
       case "campaign":
         await db().from("campaigns").insert({ restaurant_id: r.id, name: a.name, segment: a.segment, message: a.message, recipients: a.recipients });
         break;

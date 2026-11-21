@@ -1119,7 +1119,12 @@ function AfterPayment({ data, send, say }: { data: View; send: (b: object) => Pr
             <h2 id="fb" className="font-bold">
               How was it?
             </h2>
-            <p className="text-muted text-sm">It goes straight to the manager.</p>
+            <p className="text-muted text-sm">
+              It goes straight to the manager.{" "}
+              <a href="/privacy" target="_blank" className="underline">
+                Privacy
+              </a>
+            </p>
             <div className="mt-3 space-y-3">
               <Stars label="Food" value={food} onChange={setFood} />
               <Stars label="Service" value={service} onChange={setService} />
@@ -1215,7 +1220,12 @@ function JoinSheet({ data, onClose, send, say }: { data: View; onClose: () => vo
         <button type="submit" className="btn btn-primary mt-5 w-full" disabled={phone.length < 10}>
           Join
         </button>
-        <p className="text-muted mt-2 text-xs">Your number is used only by {data.restaurant.name} for your rewards{optIn ? " and offers" : ""}.</p>
+        <p className="text-muted mt-2 text-xs">
+          Your number is used only by {data.restaurant.name} for your rewards{optIn ? " and offers" : ""}. Ask them any time to stop offers or delete it.{" "}
+          <a href="/privacy" target="_blank" className="underline">
+            Privacy
+          </a>
+        </p>
         <button type="button" className="sr-only" onClick={onClose}>
           <X aria-hidden="true" /> Close
         </button>

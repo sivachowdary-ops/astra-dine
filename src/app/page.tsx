@@ -242,7 +242,12 @@ export default async function Home() {
 
       <footer className="text-muted">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm sm:flex-row sm:justify-between">
-          <p>Astra Dine by Astra AI Solutions</p>
+          <p>
+            Astra Dine by Astra AI Solutions.{" "}
+            <a href="/privacy" className="underline">
+              Privacy
+            </a>
+          </p>
           <p className="max-w-xl sm:text-right">Kaaram Kitchen is a sample restaurant made for this demo; its guests, bills and reviews are generated. Food photos from Unsplash.</p>
         </div>
       </footer>
