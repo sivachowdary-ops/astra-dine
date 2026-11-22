@@ -1,0 +1,12 @@
+# Kept out of Vercel uploads: secrets, local logins, build output and tests.
+node_modules
+.next
+.vercel
+.env*
+!.env.example
+*.local.txt
+*.tsbuildinfo
+test-results
+tests
+uploads
+video-brief.md
